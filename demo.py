@@ -107,7 +107,7 @@ def detect():
             f.write(f"[\n")
             for coord in green_pixel_coords:
                 f.write(f"({coord[1]},{coord[0]}),\n")  # Write x and y coordinates
-            f.write(f"]\n\n")
+            f.write(f"],\n\n")
 
         ################################################################
 
