@@ -45,6 +45,10 @@ def detect():
     mask_dir = save_dir / 'mask'
     mask_dir.mkdir(parents=True, exist_ok=True)
 
+    # Create a 'lane' folder to save the green pixel coordinates in txt files
+    mask_dir = save_dir / 'lane'
+    mask_dir.mkdir(parents=True, exist_ok=True)
+
     inf_time = AverageMeter()
     waste_time = AverageMeter()
     nms_time = AverageMeter()
@@ -99,22 +103,34 @@ def detect():
         ll_seg_mask = lane_line_mask(ll)
 
         
-        ###############################################################
+        ############################################################### mask
         
         # Extract green pixel coordinates from `da_seg_mask`
-        green_pixel_coords = list(zip(*((da_seg_mask == 1).nonzero())))  # Assuming 1 represents the segmented green area.
+        green_pixel_coords = list(zip(*((da_seg_mask == 1).nonzero())))
 
         frame_name = Path(path).stem
-        txt_path = save_dir / 'mask' / f"{frame_name}_mask_{frame_id}.txt"
-        with open(txt_path, 'w') as f:
+        txt_path_mask = save_dir / 'mask' / f"{frame_name}_mask_{frame_id}.txt"
+        with open(txt_path_mask, 'w') as f:
             f.write(f"[\n")
-            for coord in green_pixel_coords:
-                f.write(f"({coord[1]},{coord[0]}),\n")  # Write x and y coordinates
+            for coord_mask in green_pixel_coords:
+                f.write(f"({coord_mask[1]},{coord_mask[0]}),\n")  # Write x and y coordinates
             f.write(f"],\n")
-            
-        frame_id+=1
 
-        ################################################################
+
+        ################################################################ lane
+
+        # Extract green pixel coordinates from `ll_seg_mask`
+        red_pixel_coords = list(zip(*((ll_seg_mask == 1).nonzero())))
+
+        frame_name = Path(path).stem
+        txt_path_lane = save_dir / 'lane' / f"{frame_name}_lane_{frame_id}.txt"
+        with open(txt_path_lane, 'w') as f:
+            f.write(f"[\n")
+            for coor_lane in red_pixel_coords:
+                f.write(f"({coor_lane[1]},{coor_lane[0]}),\n")  # Write x and y coordinates
+            f.write(f"],\n")
+
+        frame_id+=1
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
