@@ -122,7 +122,7 @@ def detect():
         # Extract green pixel coordinates from `ll_seg_mask`
         red_pixel_coords = list(zip(*((ll_seg_mask == 1).nonzero())))
 
-        frame_name = Path(path).stem
+        #frame_name = Path(path).stem
         txt_path_lane = save_dir / 'lane' / f"{frame_name}_lane_{frame_id}.txt"
         with open(txt_path_lane, 'w') as f:
             f.write(f"[\n")
