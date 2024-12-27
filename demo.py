@@ -41,13 +41,16 @@ def detect():
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
+    # Create a 'mask' folder to save the green pixel coordinates in txt files
+    mask_dir = save_dir / 'mask'
+    mask_dir.mkdir(parents=True, exist_ok=True)
+
     inf_time = AverageMeter()
     waste_time = AverageMeter()
     nms_time = AverageMeter()
 
     # Load model
     stride =32
-    weights = 'data/weights/yolopv2.pt'
     model  = torch.jit.load(weights)
     device = select_device(opt.device)
     half = device.type != 'cpu'  # half precision only supported on CUDA
@@ -92,21 +95,6 @@ def detect():
         da_seg_mask = driving_area_mask(seg)
         ll_seg_mask = lane_line_mask(ll)
 
-        ################################################################
-        
-        # Extract green pixel coordinates from `da_seg_mask`
-        green_pixel_coords = list(zip(*((da_seg_mask == 1).nonzero())))  # Assuming 1 represents the segmented green area.
-
-        frame_name = Path(path).stem
-        txt_path = save_dir / 'labels' / f"{frame_name}_green_pixels.txt"
-        with open(txt_path, 'w') as f:
-            for coord in green_pixel_coords:
-                f.write(f"{coord[1]} {coord[0]}\n")  # Write x and y coordinates
-
-        ################################################################
-
-
-
         # Process detections
         for i, det in enumerate(pred):  # detections per image
           
@@ -136,6 +124,22 @@ def detect():
 
                     if save_img :  # Add bbox to image
                         plot_one_box(xyxy, im0, line_thickness=3)
+
+            ####################################
+            # Extract green pixel coordinates from the driving area mask
+            green_pixel_coords = []
+            for y in range(da_seg_mask.shape[0]):
+                for x in range(da_seg_mask.shape[1]):
+                    if da_seg_mask[y, x] == 255:
+                        green_pixel_coords.append((x, y))
+
+            # Save green pixel coordinates to a .txt file in the 'mask' folder
+            mask_txt_path = mask_dir / f'{p.stem}_{frame}.txt'
+            with open(mask_txt_path, 'w') as f:
+                for coord in green_pixel_coords:
+                    f.write(f'{coord[0]} {coord[1]}\n')
+
+            ####################################
 
             # Print time (inference)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
