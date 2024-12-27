@@ -47,6 +47,7 @@ def detect():
 
     # Load model
     stride =32
+    weights = 'data/weights/yolopv2.pt'
     model  = torch.jit.load(weights)
     device = select_device(opt.device)
     half = device.type != 'cpu'  # half precision only supported on CUDA
@@ -90,6 +91,21 @@ def detect():
 
         da_seg_mask = driving_area_mask(seg)
         ll_seg_mask = lane_line_mask(ll)
+
+        ################################################################
+        
+        # Extract green pixel coordinates from `da_seg_mask`
+        green_pixel_coords = list(zip(*((da_seg_mask == 1).nonzero())))  # Assuming 1 represents the segmented green area.
+
+        frame_name = Path(path).stem
+        txt_path = save_dir / 'labels' / f"{frame_name}_green_pixels.txt"
+        with open(txt_path, 'w') as f:
+            for coord in green_pixel_coords:
+                f.write(f"{coord[1]} {coord[0]}\n")  # Write x and y coordinates
+
+        ################################################################
+
+
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
