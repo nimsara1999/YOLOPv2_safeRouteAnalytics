@@ -104,9 +104,10 @@ def detect():
         frame_name = Path(path).stem
         txt_path = save_dir / 'labels' / f"{frame_name}_green_pixels.txt"
         with open(txt_path, 'w') as f:
+            f.write(f"[\n")
             for coord in green_pixel_coords:
-                f.write(f"{coord[1]} {coord[0]}\n")  # Write x and y coordinates
-            f.write(f"- - - - - - - - - - - - -\n")
+                f.write(f"({coord[1]},{coord[0]}),\n")  # Write x and y coordinates
+            f.write(f"]\n\n")
 
         ################################################################
 
