@@ -68,6 +68,9 @@ def detect():
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
+
+    frame_id = 1
+
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -102,12 +105,14 @@ def detect():
         green_pixel_coords = list(zip(*((da_seg_mask == 1).nonzero())))  # Assuming 1 represents the segmented green area.
 
         frame_name = Path(path).stem
-        txt_path = save_dir / 'labels' / f"{frame_name}_green_pixels.txt"
+        txt_path = save_dir / 'mask' / f"{frame_name}_mask_{frame_id}.txt"
         with open(txt_path, 'w') as f:
             f.write(f"[\n")
             for coord in green_pixel_coords:
                 f.write(f"({coord[1]},{coord[0]}),\n")  # Write x and y coordinates
-            f.write(f"],\n\n")
+            f.write(f"],\n")
+            
+        frame_id+=1
 
         ################################################################
 
